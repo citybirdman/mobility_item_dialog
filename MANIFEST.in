@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include mobility_advanced_item_dialog *.css
+recursive-include mobility_advanced_item_dialog *.csv
+recursive-include mobility_advanced_item_dialog *.html
+recursive-include mobility_advanced_item_dialog *.ico
+recursive-include mobility_advanced_item_dialog *.js
+recursive-include mobility_advanced_item_dialog *.json
+recursive-include mobility_advanced_item_dialog *.md
+recursive-include mobility_advanced_item_dialog *.png
+recursive-include mobility_advanced_item_dialog *.py
+recursive-include mobility_advanced_item_dialog *.svg
+recursive-include mobility_advanced_item_dialog *.txt
+recursive-exclude mobility_advanced_item_dialog *.pyc
