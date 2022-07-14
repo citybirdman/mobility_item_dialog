@@ -24,7 +24,7 @@ frappe.ui.form.on('Sales Order', {
 					}
 					else{
 						
-						console.log(selections[0])
+						
 						data = JSON.parse(selections[0])
 					}
 					
@@ -223,11 +223,6 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		return this.$results.find('.list-item-container').map(function () {
 			
 			if ($(this).find('.list-row-check:checkbox:checked').length > 0) {
-				var selected=($(this).attr('data-item-name')).split(",");
-				selected.forEach(element => {
-					console.log(element)
-					
-				});
 				return $(this).attr('data-item-name');			
 			}
 		}).get();

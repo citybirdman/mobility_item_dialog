@@ -21,10 +21,6 @@ def get_item_details(filters=None):
             condition += " and brand = '{0}' ".format(filters["brand"])
         if filters["txt"]:
             condition += " and (name like '%{0}%' or item_name like '%{0}%') ".format(filters["txt"])
-        # elif(filters["brand"]==""):
-        #     condition=("and (name like '%{0}%' or item_name like '%{0}%' ".format(filters["item_code"]))
-        # else:
-        #     condition=("and name= {0} and brand= '{1}' ".format(filters["item_code"],filters["brand"]))
         result=frappe.db.sql("""Select item_code as 'Item Code', item_name as 'Item Name', brand as Brand ,has_batch_no as 'Has Batch No'
         from `tabItem` where has_batch_no= 1 {0}  and disabled= 0 """.format(condition),as_dict=True)
         result_value=[]
