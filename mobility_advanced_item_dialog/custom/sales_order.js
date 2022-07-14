@@ -1,16 +1,21 @@
 frappe.ui.form.on('Sales Order', {
-	refresh: function(frm) {},
-      
-       
+	onload_post_render(frm){
+		if(frm.doc.__unsaved==1){
+		frm.clear_table("items");
+		frm.refresh_field('items')
+		}
+	},
 	get_items:function(frm) {
 		let data = {};
+		
 		var c = new frappe.ui.form.AereleSelectDialog({
-				doctype: "Quotation",
+				doctype: "Sales Order",
 				target: frm,
 				setters: [],
-				display_columns: {"Item Code":'',"Item Name":'',"Brand":'', "Qty":'',"Rate":'',"Production Year":""},
+				display_columns: {"Item Code":'',"Item Name":'',"Brand":'', "Production Year":'',"Rate":'',"Qty":""},
 				custom_method: 'mobility_advanced_item_dialog.custom.sales_order.get_item_details',
 				action(selections, h, a, b) {
+					
 					if(selections.length>1){
 						frappe.throw("Select only one Item");
 					}
@@ -18,18 +23,18 @@ frappe.ui.form.on('Sales Order', {
 						frappe.throw("Select atleast one Item");
 					}
 					else{
-						console.log(selections);
-						data = JSON.parse(selections[0])
-						console.log(data)
 						
+						
+						data = JSON.parse(selections[0])
 					}
+					
 					let row = frm.add_child("items")
-					frappe.model.set_value(row.doctype, row.name, "item_code", data.item_code.toString());
 					if(data){
+						frappe.model.set_value(row.doctype, row.name, "item_code", data.item_code.toString());
 						frappe.prompt([
 							{
-								label: 'Item',
-								fieldname: 'item',
+								label: 'Item Code',
+								fieldname: 'item_code',
 								fieldtype: 'Data',
 								default:data.item_code,
 								read_only:1
@@ -44,10 +49,6 @@ frappe.ui.form.on('Sales Order', {
 								frappe.model.set_value(row.doctype, row.name, "qty", values.qty);
 								frappe.model.set_value(row.doctype, row.name, "rate", data.rate);
 								frappe.model.set_value(row.doctype, row.name, "batch", data.batch.toString());
-		
-								
-								
-								
 							}
 						})
 					}
@@ -60,13 +61,9 @@ frappe.ui.form.on('Sales Order', {
 	}
 	 
 );
-
-
 frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 	constructor(opts) {
-		/* Options: doctype, target, setters, get_query, action, add_filters_group, data_fields, primary_action_label */
 		Object.assign(this, opts);
-		
 		var me = this;
 		if (this.doctype != "[Select]") {
 			frappe.model.with_doctype(this.doctype, function () {
@@ -76,14 +73,11 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			this.make();
 		}
 	}
-
 	make() {
 		let me = this;
 		this.page_length = 20;
 		this.start = 0;
 		let fields = this.get_primary_filters();
-
-		// Make results area
 		fields = fields.concat([
 			{
 				fieldtype: "Button", fieldname: "more_btn", label: __("Search"), 
@@ -94,15 +88,10 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			},
 			{ fieldtype: "HTML", fieldname: "results_area" }
 		]);
-
-		// Custom Data Fields
 		if (this.data_fields) {
-			// fields.push({ fieldtype: "Section Break" });
 			fields = fields.concat(this.data_fields);
 		}
-
 		let doctype_plural = this.doctype;
-
 		this.dialog = new frappe.ui.Dialog({
 			title: 'Get Items',
 			fields: fields,
@@ -110,44 +99,39 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		this.dialog = new frappe.ui.Dialog({
 			title: __("Select {0}", ["Items"]),
 			fields: fields,
-			primary_action_label: this.primary_action_label || __("Get Items"),
-			
+			primary_action_label: this.primary_action_label || __("Add Item"),
 			primary_action: function () {
 				let filters_data = me.get_custom_filters();
 				
 				me.action(me.get_checked_values(), cur_dialog.get_values(), me.args, filters_data);
 			},
-			
 		});
 		if (this.add_filters_group) {
 			this.make_filter_area();
 		}
-
 		this.$parent = $(this.dialog.body);
 		this.$wrapper = this.dialog.fields_dict.results_area.$wrapper.append(`<div class="results"
 			style="border: 1px solid #d1d8dd; border-radius: 3px; height: 300px; overflow: auto;"></div>`);
-
 		this.$results = this.$wrapper.find('.results');
-
 		this.$results.append(this.make_list_row());
-
 		this.args = {};
-
 		this.bind_events();
 		this.get_results();
 		this.dialog.show();
 	}
-
-	check_onchaange() {
-		console.log("Changed");
-	}
-
-
 	get_primary_filters() {
 		let fields = [];
-
 		let columns = new Array(3);
 		columns[0] = [
+			{
+				fieldtype: "Data",
+				label: __("Item Search Bar"),
+				fieldname: "txt"
+			},
+			{
+				fieldname: "column_break_3",
+				fieldtype: "Column Break"
+			},
 			{
 				fieldtype: "Link",
 				label: __("Item Code"),
@@ -163,52 +147,20 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				label: __("Brand"),
 				fieldname: "brand",
 				options: "Brand",
-	
 			},
-			
-			
 			{
 				fieldname: "section_break_1",
 				fieldtype: "Section Break"
 			},
 			{
-
 				fieldtype: "Check",
 				label: __("Exclude Zero Quantity"),
-				fieldname: "exclude_zero_quantity",
-				
+				fieldname: "exclude_zero_quantity",	
 			},
-
 		];
-		// columns[1] = [
-			
-		// ];
-		// columns[2] = [];
-
-		// if ($.isArray(this.setters)) {
-		// 	this.setters.forEach((setter, index) => {
-		// 		columns[(index + 1) % 3].push(setter);
-		// 	});
-		// } else {
-		// 	Object.keys(this.setters).forEach((setter, index) => {
-		// 		let df_prop = frappe.meta.docfield_map[this.doctype][setter];
-		// 		columns[(index + 1) % 3].push({
-		// 			fieldtype: df_prop.fieldtype,
-		// 			label: df_prop.label,
-		// 			fieldname: setter,
-		// 			options: df_prop.options,
-		// 			default: this.setters[setter]
-		// 		});
-		// 	});
-		// }
-		// if (Object.seal) {
-		// 	Object.seal(columns);
-		// }
-
 		fields = [
 			...columns[0],
 		];
-
 		if (this.add_filters_group) {
 			fields.push(
 				{
@@ -217,10 +169,8 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				}
 			);
 		}
-
 		return fields;
 	}
-
 	make_filter_area() {
 		this.filter_group = new frappe.ui.FilterGroup({
 			parent: this.dialog.get_field('filter_area').$wrapper,
@@ -230,7 +180,6 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			}
 		});
 	}
-
 	get_custom_filters() {
 		if (this.add_filters_group && this.filter_group) {
 			return this.filter_group.get_filters().reduce((acc, filter) => {
@@ -242,7 +191,6 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			return [];
 		}
 	}
-
 	bind_events() {
 		let me = this;
 
@@ -251,20 +199,17 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				$(this).find(':checkbox').trigger('click');
 			}
 		});
-
 		this.$results.on('click', '.list-item--head :checkbox', (e) => {
 			this.$results.find('.list-item-container .list-row-check')
 				.prop("checked", ($(e.target).is(':checked')));
 		});
-
 		this.$parent.find('.input-with-feedback').on('change', () => {
 			
 			frappe.flags.auto_scroll = false;
 			this.get_results();
 		});
-		
 		this.$parent.find('[data-fieldtype="Data"]').on('input', () => {
-			debugger
+			
 			var $this = $(this);
 			clearTimeout($this.data('timeout'));
 			$this.data('timeout', setTimeout(function () {
@@ -274,37 +219,24 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			}, 300));
 		});
 	}
-
 	get_checked_values() {
-		console.log(this.$results[0])
-		// Return name of checked value.
 		return this.$results.find('.list-item-container').map(function () {
 			
 			if ($(this).find('.list-row-check:checkbox:checked').length > 0) {
-				return $(this).attr('data-item-name');
-				
+				return $(this).attr('data-item-name');			
 			}
-		
 		}).get();
-		
 	}
-
 	get_checked_items() {
-		// Return checked items with all the column values.
 		let checked_values = this.get_checked_values();
 		return this.results.filter(res => checked_values.includes(res.date));
 	}
-
 	make_list_row(result = {}) {
 		var me = this;
-		// Make a head row by default (if result not passed)
 		let head = Object.keys(result).length === 0;
-
 		let contents = ``;
 		let columns = [];
-
 		let custom_columns = {...this.display_columns}
-
 		if ($.isArray(custom_columns)) {
 			for (let df of custom_columns) {
 				columns.push(df.fieldname);
@@ -312,97 +244,84 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		} else {
 			columns = columns.concat(Object.keys(custom_columns));
 		}
-
 		columns.forEach(function (column) {
-			contents += `<div class="list-item__content ellipsis" style="flex: 0 0 100px">
+			if (column === "Item Name") {
+				contents += `<div class="list-item__content ellipsis" style="flex: 0 0 150px">
 				${
 	head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
 		: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}">${__(result[column] || '')}</span>`
 			: `<a href="${"#Form/" + me.doctype + "/" + result[column] || ''}" class="list-id ellipsis" title="${__(result[column] || '')}">
 							${__(result[column] || '')}</a>`)}
 			</div>`;
-		});
 
+			} else {
+				contents += `<div class="list-item__content ellipsis" style="flex: 0 0 80px">
+				${
+	head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
+		: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}">${__(result[column] || '')}</span>`
+			: `<a href="${"#Form/" + me.doctype + "/" + result[column] || ''}" class="list-id ellipsis" title="${__(result[column] || '')}">
+							${__(result[column] || '')}</a>`)}
+			</div>`;
+
+			}
+			
+		});
 		let $row = $(`<div class="list-item" style="z-index: 1">
 			<div class="list-item__content" style="flex: 0 0 10px;">
-				<input type="checkbox" class="list-row-check" data-item-name='{"item_code":${result["Item Code"]}, "rate":${result["Rate"]},"batch":${result["Batch"]},"prod_year":${result["Production Year"]}}' ${result.checked ? 'checked' : ''}>
+				<input type="checkbox" class="list-row-check" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() + "\"" : ""}, "rate":${result["Rate"]},"batch":${ (result["Batch"]) ? "\""+result["Batch"].toString()+ "\"" : "" },"prod_year":${(result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : ""}}' ${result.checked ? 'checked' : ''}>
 			</div>
 			${contents}
 		</div>`);
-
 		head ? $row.addClass('list-item--head')
-			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${result["Item Code"]},"rate":${result["Rate"]},"batch":${result["Batch"]},"prod_year":${result["Production Year"]}}'></div>`).append($row);
-
+			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : ""},"rate":${result["Rate"]},"batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : ""  },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "" }}'></div>`).append($row);
 		$(".modal-dialog .list-item--head").css("z-index", 1);
 		$(".modal-dialog .shaded-section").css("overflow", 'scroll');
 		$(".modal-dialog .shaded-section").css("display", 'grid');
-		
 		return $row;
 	}
-
 	render_result_list(results, more = 0, empty = true) {
+		
 		var me = this;
 		var more_btn = me.dialog.fields_dict.more_btn.$wrapper;
-
-		// Make empty result set if filter is set
 		if (!frappe.flags.auto_scroll && empty) {
 			this.empty_list();
 		}
-
 		if (results.length === 0) return;
 		more_btn.show();
-
 		let checked = this.get_checked_values();
-
 		results
 			.filter(result => !checked.includes(result.date))
 			.forEach(result => {
 				me.$results.append(me.make_list_row(result));
 			});
-
 		if (frappe.flags.auto_scroll) {
 			this.$results.animate({ scrollTop: me.$results.prop('scrollHeight') }, 500);
 		}
+	
 	}
-
 	empty_list() {
-		// Store all checked items
 		let checked = this.get_checked_items().map(item => {
 			return {
 				...item,
 				checked: true
 			};
 		});
-
-		// Remove **all** items
 		this.$results.find('.list-item-container').remove();
-
-		// Rerender checked items
 		this.render_result_list(checked, 0, false);
 	}
-
 	get_results() {
 		let me = this;
 		let filters = this.get_query ? this.get_query().filters : {} || {};
 		let filter_fields = [];
-		console.log('1')
-	
 		if ($.isArray(this.setters)) {
-			console.log('2')
 			for (let df of this.setters) {
-				console.log('3')
 				filters[df.fieldname] = me.dialog.fields_dict[df.fieldname].get_value() || undefined;
 				me.args[df.fieldname] = filters[df.fieldname];
 				filter_fields.push(df.fieldname);
-				
-			
 			}
-			console.log('4')
 		} else {
-			console.log('5')
 			Object.keys(this.setters).forEach(function (setter) {
 				var value = me.dialog.fields_dict[setter].get_value();
-				
 				if (me.dialog.fields_dict[setter].df.fieldtype == "Data" && value) {
 					filters[setter] = ["like", "%" + value + "%"];
 				} else {
@@ -412,22 +331,18 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				}
 			});
 		}
-		console.log('6')
-	
 		let filter_group = this.get_custom_filters();
-		console.log(filter_group);
+	
 		Object.assign(filters, filter_group);
-
 		let args = {
 			filters:{
 			item_code: me.dialog.fields_dict["item_code"].get_value(),
 			brand: me.dialog.fields_dict["brand"].get_value(),
-			warehouse:cur_frm.doc.set_warehouse,
-			price_list:cur_frm.doc.selling_price_list,	
+			txt: me.dialog.fields_dict["txt"].get_value(),
+			warehouse:(cur_frm.doc.set_warehouse)?cur_frm.doc.set_warehouse :'',
+			price_list:(cur_frm.doc.selling_price_list)?cur_frm.doc.selling_price_list :'',	
 			exclude_zero_quantity: me.dialog.fields_dict["exclude_zero_quantity"].get_value()}
 		};
-		console.log(args);
-		
 		frappe.call({
 			type: "GET",
 			body:args,
@@ -436,6 +351,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			freeze: true,
 			args: args,
 			callback: function (r) {
+				
 				let more = 0;
 				me.results = [];
 				if(r.message) {
