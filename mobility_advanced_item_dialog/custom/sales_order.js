@@ -49,6 +49,7 @@ frappe.ui.form.on('Sales Order', {
 								frappe.model.set_value(row.doctype, row.name, "qty", values.qty);
 								frappe.model.set_value(row.doctype, row.name, "rate", data.rate);
 								frappe.model.set_value(row.doctype, row.name, "batch", data.batch.toString());
+								frappe.model.set_value(row.doctype, row.name, "production_year", data.prod_year.toString());
 							}
 						})
 					}
