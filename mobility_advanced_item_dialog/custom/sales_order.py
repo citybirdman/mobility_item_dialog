@@ -3,8 +3,6 @@ import frappe
 from frappe.model.document import Document
 from json import loads
 from erpnext.stock.doctype.batch.batch import get_batch_qty
-class SalesInvoice(Document):
-    pass
 
 @frappe.whitelist()
 def get_item_details(filters=None):
