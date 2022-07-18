@@ -14,46 +14,7 @@ frappe.ui.form.on('Sales Order', {
 				setters: [],
 				display_columns: {"Item Code":'',"Item Name":'',"Brand":'', "Production Year":'',"Rate":'',"Qty":""},
 				custom_method: 'mobility_advanced_item_dialog.custom.sales_order.get_item_details',
-				action(selections, h, a, b) {
-					
-					if(selections.length>1){
-						frappe.throw("Select only one Item");
-					}
-						if(selections.length === 0){
-						frappe.throw("Select atleast one Item");
-					}
-					else{
-						
-						
-						data = JSON.parse(selections[0])
-					}
-					
-					let row = frm.add_child("items")
-					if(data){
-						frappe.model.set_value(row.doctype, row.name, "item_code", data.item_code.toString());
-						frappe.prompt([
-							{
-								label: 'Item Code',
-								fieldname: 'item_code',
-								fieldtype: 'Data',
-								default:data.item_code,
-								read_only:1
-							},
-							{
-								label: 'Quantity',
-								fieldname: 'qty',
-								fieldtype: 'Float',
-							},
-						], (values) => {
-							if(values.qty){
-								frappe.model.set_value(row.doctype, row.name, "qty", values.qty);
-								frappe.model.set_value(row.doctype, row.name, "rate", data.rate);
-								frappe.model.set_value(row.doctype, row.name, "batch", data.batch.toString());
-								frappe.model.set_value(row.doctype, row.name, "production_year", data.prod_year.toString());
-							}
-						})
-					}
-				}
+				
 
 			})
 			
@@ -100,12 +61,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		this.dialog = new frappe.ui.Dialog({
 			title: __("Select {0}", ["Items"]),
 			fields: fields,
-			primary_action_label: this.primary_action_label || __("Add Item"),
-			primary_action: function () {
-				let filters_data = me.get_custom_filters();
-				
-				me.action(me.get_checked_values(), cur_dialog.get_values(), me.args, filters_data);
-			},
+			
 		});
 		if (this.add_filters_group) {
 			this.make_filter_area();
@@ -207,7 +163,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		this.$parent.find('.input-with-feedback').on('change', () => {
 			
 			frappe.flags.auto_scroll = false;
-			this.get_results();
+			
 		});
 		this.$parent.find('[data-fieldtype="Data"]').on('input', () => {
 			
@@ -216,7 +172,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			$this.data('timeout', setTimeout(function () {
 				frappe.flags.auto_scroll = true;
 				me.empty_list();
-				me.get_results();
+				
 			}, 300));
 		});
 	}
@@ -246,38 +202,90 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			columns = columns.concat(Object.keys(custom_columns));
 		}
 		columns.forEach(function (column) {
+			
 			if (column === "Item Name") {
-				contents += `<div class="list-item__content ellipsis" style="flex: 0 0 150px">
+				contents += `<div class="list-item__content ellipsis" style="flex: 50%">
 				${
 	head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
-		: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}">${__(result[column] || '')}</span>`
-			: `<a href="${"#Form/" + me.doctype + "/" + result[column] || ''}" class="list-id ellipsis" title="${__(result[column] || '')}">
-							${__(result[column] || '')}</a>`)}
-			</div>`;
-
-			} else {
-				contents += `<div class="list-item__content ellipsis" style="flex: 0 0 80px">
-				${
-	head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
-		: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}">${__(result[column] || '')}</span>`
+		: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}" style = "overflow-wrap: break-word;word-wrap: break-word;hyphens: auto;white-space: break-spaces;">${__(result[column] || '')}</span>`
 			: `<a href="${"#Form/" + me.doctype + "/" + result[column] || ''}" class="list-id ellipsis" title="${__(result[column] || '')}">
 							${__(result[column] || '')}</a>`)}
 			</div>`;
 
 			}
 			
+			else {
+				if (column === "Item Code") {
+					contents += `<div class="list-item__content ellipsis" style="flex: 10%">
+					${
+		head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
+			: (`<span class="ellipsis result-row" title=" " <b><a href="#">${__(result[column] || '')} </a></b>
+			</span>`
+				)}
+				</div>`;
+					
+				}
+				else{
+				contents += `<div class="list-item__content ellipsis" style="flex: 10%">
+				${
+	head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
+		: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}"style = "overflow-wrap: break-word;word-wrap: break-word;hyphens: auto;white-space: break-spaces;">${__(result[column] || '')}</span>`
+			: `<a href="${"#Form/" + me.doctype + "/" + result[column] || ''}" class="list-id ellipsis" title="${__(result[column] || '')}">
+							${__(result[column] || '')}</a>`)}
+			</div>`;
+				}
+			}
+			
+			
 		});
 		let $row = $(`<div class="list-item" style="z-index: 1">
 			<div class="list-item__content" style="flex: 0 0 10px;">
-				<input type="checkbox" class="list-row-check" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() + "\"" : ""}, "rate":${result["Rate"]},"batch":${ (result["Batch"]) ? "\""+result["Batch"].toString()+ "\"" : "" },"prod_year":${(result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : ""}}' ${result.checked ? 'checked' : ''}>
+				<div class="list-row-check" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() + "\"" : ""}, "rate":${result["Rate"]},"batch":${ (result["Batch"]) ? "\""+result["Batch"].toString()+ "\"" : "" },"prod_year":${(result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : ""}}' ${result.checked ? 'checked' : ''}></div>
 			</div>
 			${contents}
 		</div>`);
 		head ? $row.addClass('list-item--head')
-			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : ""},"rate":${result["Rate"]},"batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : ""  },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "" }}'></div>`).append($row);
+			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : ""},"rate":${result["Rate"]},"batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : ""  },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "" }}' </div>`).append($row);
 		$(".modal-dialog .list-item--head").css("z-index", 1);
 		$(".modal-dialog .shaded-section").css("overflow", 'scroll');
 		$(".modal-dialog .shaded-section").css("display", 'grid');
+		$row.find("a")
+						
+						.click(function () {
+							let data = {};
+
+								data=(JSON.parse($row.find("a").prevObject[0].dataset.itemName))
+						
+							let rows = cur_frm.add_child("items")
+							if(data){
+								
+								frappe.prompt([
+									{
+										label: 'Item Code',
+										fieldname: 'item_code',
+										fieldtype: 'Data',
+										default:data.item_code,
+										read_only:1
+									},
+									{
+										label: 'Quantity',
+										fieldname: 'qty',
+										fieldtype: 'Float',
+									},
+								], (values) => {
+									frappe.model.set_value(rows.doctype, rows.name, "item_code", data.item_code.toString());
+									setTimeout(() => { if(values.qty){
+										frappe.model.set_value(rows.doctype, rows.name, "qty", values.qty);
+										frappe.model.set_value(rows.doctype, rows.name, "rate", data.rate);
+										frappe.model.set_value(rows.doctype, rows.name, "batch", data.batch.toString());
+										frappe.model.set_value(rows.doctype, rows.name, "production_year", data.prod_year.toString());
+									}  }, 2000);
+									
+								})
+						}
+						
+							return false;
+						})
 		return $row;
 	}
 	render_result_list(results, more = 0, empty = true) {
