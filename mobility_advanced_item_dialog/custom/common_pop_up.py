@@ -24,6 +24,8 @@ def get_item_details(filters=None):
         result_value=[]
         length=len(result)
         for i in range(0,length):
+            if(str(result[i]["Brand"])=='None'):
+                result[i]["Brand"] = ""
             batch_values=get_qnt_on_batch_warehouse(str(result[i]["Item Code"]),filters["warehouse"],filters["price_list"])
             if(filters["exclude_zero_quantity"]==0):
                 for j in range(len(batch_values)):
