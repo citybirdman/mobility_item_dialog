@@ -51,7 +51,7 @@ def get_qnt_on_batch_warehouse(item,warehouse,price_list):
         batch.append({"production_year":production_year,
         
 
-        "qty":str(qty),
+        "qty":str(int(qty)),
         "rate":(frappe.db.get_value("Item Price",{"item_code":item,"price_list":price_list,"batch_no":batchs["name"]},"price_list_rate")),
         "batch_no":str(batchs["name"])
         })

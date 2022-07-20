@@ -129,8 +129,14 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 	}
 
 	bind_events() {
+		
 		let me = this;
+		frappe.ui.keys.on('enter',function(e)
+		{
+			me.get_results();
+		}
 
+		);
 		this.$results.on('click', '.list-item-container', function (e) {
 			if (!$(e.target).is(':checkbox') && !$(e.target).is('a')) {
 				$(this).find(':checkbox').trigger('click');
@@ -155,6 +161,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				
 			}, 300));
 		});
+
 	}
 
 	get_checked_values() {
@@ -199,7 +206,10 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 					contents += `<div class="list-item__content ellipsis" style="flex: 17%">
 					${
 						head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
-						: (`<span class="ellipsis result-row" title=" " <b><a href="#">${__(result[column] || '')} </a></b>
+						: (`<span class="ellipsis result-row" title="${__(result[column] || '')}">
+						<div>
+						<a href="#" data-value="${__(result[column] || '')}"> ${__(result[column] || '')}</a>
+						</div>
 						</span>`)}
 						</div>`;
 				}
@@ -323,6 +333,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				}
 			});
 		}
+		
 		let filter_group = this.get_custom_filters();
 	
 		Object.assign(filters, filter_group);

@@ -1,5 +1,10 @@
 {% include 'mobility_advanced_item_dialog/custom/common_popup.js' %}
 frappe.ui.form.on('Sales Invoice', {
+	refresh: function(frm){
+		if (frm.doc.docstatus == 1) {
+			frm.set_df_property('get_items','hidden',1)
+		}
+	},
 	onload_post_render(frm){
 		if(frm.doc.__unsaved==1){
 		frm.clear_table("items");
