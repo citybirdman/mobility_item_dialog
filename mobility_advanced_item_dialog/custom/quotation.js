@@ -1,11 +1,13 @@
 frappe.ui.form.on('Quotation', {
 	onload_post_render(frm){
 		if(frm.doc.__unsaved==1){
-		frm.clear_table("items");
-		frm.refresh_field('items')
+			if(frm.doc.items.length > 0 && !frm.doc.items[0].item_code) {
+				frm.clear_table("items");
+				frm.refresh_field('items')
+			}
 		}
 	},
-	get_items:function(frm) {
+	get_items: function(frm) {
 		let data = {};
 		
 		var c = new frappe.ui.form.AereleSelectDialog({
