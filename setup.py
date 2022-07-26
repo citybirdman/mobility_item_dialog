@@ -10,7 +10,7 @@ setup(
 	name="mobility_advanced_item_dialog",
 	version=version,
 	description="Mobility-Advanced-Item-Dialog",
-	author="Aerele",
+	author="Aerele Technologies",
 	author_email="hello@aerele.in",
 	packages=find_packages(),
 	zip_safe=False,
