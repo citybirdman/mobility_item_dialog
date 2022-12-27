@@ -13,12 +13,19 @@ frappe.ui.form.on('Quotation', {
 			}
 		}
 	},
-	get_items:function(frm) {	
+	get_items:function(frm) {
 		var dialog = new frappe.ui.form.AereleSelectDialog({
 				doctype: "Quotation",
 				target: frm,
 				setters: [],
-				display_columns: {"Item Code":'',"Item Name":'',"Brand":'', "Production Year":'',"Rate":'',"Qty":""},
+				display_columns: {
+						"Item Code":'',
+						"Item Name":'',
+						"Brand":'',
+						// "Production Year":'',
+						"Rate":'',
+						"Qty":""
+					},
 				custom_method: 'mobility_advanced_item_dialog.custom.common_popup.get_item_details',
 			})
 		}

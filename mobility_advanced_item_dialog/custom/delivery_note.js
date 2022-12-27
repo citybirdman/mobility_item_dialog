@@ -18,7 +18,14 @@ frappe.ui.form.on('Delivery Note', {
 				doctype: "Delivery Note",
 				target: frm,
 				setters: [],
-				display_columns: {"Item Code":'',"Item Name":'',"Brand":'', "Production Year":'',"Rate":'',"Qty":""},
+				display_columns: {
+						"Item Code":'',
+						"Item Name":'',
+						"Brand":'',
+						"Production Year":'',
+						"Rate":'',
+						"Qty":""
+					},
 				custom_method: 'mobility_advanced_item_dialog.custom.common_popup.get_item_details',
 			})
 		}
