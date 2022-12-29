@@ -22,7 +22,7 @@ frappe.ui.form.on('Delivery Note', {
 						"Item Code":'',
 						"Item Name":'',
 						"Brand":'',
-						"Production Year":'',
+						// "Production Year":'',
 						"Rate":'',
 						"Qty":""
 					},
