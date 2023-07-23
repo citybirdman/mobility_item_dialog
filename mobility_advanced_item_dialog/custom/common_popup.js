@@ -351,7 +351,6 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			body:args,
 			method: this.custom_method,
 			no_spinner: true,
-			freeze: true,
 			args: args,
 			callback: function (data) {
 				let more = 0;
