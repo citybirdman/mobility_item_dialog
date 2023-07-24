@@ -60,10 +60,6 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				fieldtype: "Data",
 				label: __("Item Search Bar"),
 				fieldname: "txt",
-				change: () => {
-					this.start += 20;
-					this.get_results();
-				}
 			},
 			{
 				fieldname: "column_break_3",
