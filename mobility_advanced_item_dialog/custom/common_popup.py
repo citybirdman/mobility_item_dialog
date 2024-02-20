@@ -33,7 +33,7 @@ def get_item_details(filters=None):
             else:
                 for j in range(len(batch_values)):
                     if(batch_values[j]["qty"]!='0'):
-                        result_value.append({"Item Code":str(result[i]["Item Code"]) + str(result[i]["Item Name"]),"Item Name":str(result[i]["Item Name"]),"Brand":str(result[i]["Brand"]),"Production Year":str(batch_values[j]["production_year"]),"Rate":batch_values[j]["rate"],"Qty":batch_values[j]["qty"],"Batch":str(batch_values[j]["batch_no"])})
+                        result_value.append({"Item Code":str(result[i]["Item Code"]),"Item Name":str(result[i]["Item Name"]),"Brand":str(result[i]["Brand"]),"Production Year":str(batch_values[j]["production_year"]),"Rate":batch_values[j]["rate"],"Qty":batch_values[j]["qty"],"Batch":str(batch_values[j]["batch_no"])})
         return {"values": result_value}
     return{"values":[]}
 
