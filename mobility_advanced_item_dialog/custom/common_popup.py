@@ -190,7 +190,7 @@ def get_item_details(filters=None):
                         }
                     )
             else:
-                for j in range(len(batch_values)):
+                for j in range(len(batch_values)): 
                     if(batch_values[j]["qty"]!='0'):
                         result_value.append(
                             {
