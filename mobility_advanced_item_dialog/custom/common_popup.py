@@ -14,8 +14,10 @@ def get_item_details(filters=None):
         condition = ""
         if filters["item_code"]:
             condition += " and name = '{0}' ".format(filters["item_code"])
-        if filters["brand"]:
-            condition += " and brand = '{0}' ".format(filters["brand"])
+        if len(frappe.parse_json(filters["brand"])):
+            condition += " and brand in ({0}) ".format(", ".join(f"'{item}'" for item in frappe.parse_json(filters["brand"]))) #["brand_1"]
+            
+
         if filters["country_of_origin"]:
             condition += " and country_of_origin = '{0}' ".format(filters["country_of_origin"])
         if filters["item_group"]:
@@ -183,9 +185,9 @@ def get_item_details(filters=None):
                             "Item Code":str(result[i]["Item Code"]),
                             "Item Name":str(result[i]["Item Name"]),
                             "Brand":str(result[i]["Brand"]),
-                            "Rate":batch_values[j]["rate"],
-                            "Qty":batch_values[j]["qty"],
-                            "Available": actual_available_qty[0].actual_available_qty or 0,
+                            "Selling Price":batch_values[j]["rate"],
+                            "Actual Stock":batch_values[j]["qty"],
+                            "Available Stock": actual_available_qty[0].actual_available_qty or 0,
                             "Valuation Rate": vr[0].valuation_rate
                         }
                     )
@@ -197,9 +199,9 @@ def get_item_details(filters=None):
                                 "Item Code":str(result[i]["Item Code"]),
                                 "Item Name":str(result[i]["Item Name"]),
                                 "Brand":str(result[i]["Brand"]),
-                                "Rate":batch_values[j]["rate"],
-                                "Qty":batch_values[j]["qty"],
-                                "Available": actual_available_qty[0].actual_available_qty or 0,
+                                "Selling Price":batch_values[j]["rate"],
+                                "Actual Stock":batch_values[j]["qty"],
+                                "Available Stock": actual_available_qty[0].actual_available_qty or 0,
                                 "Valuation Rate": vr[0].valuation_rate
                             }
                         )

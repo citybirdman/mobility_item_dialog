@@ -87,10 +87,13 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			fieldtype: "Column Break"
 			},
 			{
-				fieldtype: "Link",
+				fieldtype: "MultiSelectList",
 				label: __("Brand"),
 				fieldname: "brand",
 				options: "Brand",
+				get_data: function (txt) {
+					return frappe.db.get_link_options("Brand", txt);
+				},
 				change: () => {
 					this.start += 20;
 					this.get_results();
@@ -287,12 +290,12 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		});
 		let $row = $(`<div class="list-item" style="z-index: 1;height: auto;align-items: baseline;padding-left:unset;" >
 			<div class="list-item__content">
-				<div class="list-row-check" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() + "\"" : ""}, "rate":${result["Rate"]},"batch":${ (result["Batch"]) ? "\""+result["Batch"].toString()+ "\"" : "" },"prod_year":${(result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : ""}}' ${result.checked ? 'checked' : ''}></div>
+				<div class="list-row-check" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() + "\"" : ""}, "rate":${result["Selling Price"]},"batch":${ (result["Batch"]) ? "\""+result["Batch"].toString()+ "\"" : "" },"prod_year":${(result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : ""}}' ${result.checked ? 'checked' : ''}></div>
 			</div>
 			${contents}
 		</div>`);
 		head ? $row.addClass('list-item--head').css("height","40px").css("align-items","unset")
-			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : "\"\""},"rate":${result["Rate"] || 0},"batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : "\"\""  },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "\"\"" }}' </div>`).append($row);
+			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : "\"\""},"rate":${result["Selling Price"] || 0},"batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : "\"\""  },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "\"\"" }}' </div>`).append($row);
 		$(".modal-dialog .list-item--head").css("z-index", 1);
 		$(".modal-dialog .shaded-section").css("overflow", 'scroll');
 		$(".modal-dialog .shaded-section").css("display", 'grid');
@@ -406,14 +409,15 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		Object.assign(filters, filter_group);
 		let args = {
 			filters:{
-			item_code: me.dialog.fields_dict["item_code"].get_value(),
-			brand: me.dialog.fields_dict["brand"].get_value(),
-			txt: me.dialog.fields_dict["txt"].get_value(),
-			item_group: me.dialog.fields_dict["item_group"].get_value(),
-			country_of_origin: me.dialog.fields_dict["country_of_origin"].get_value(),
-			warehouse:(cur_frm.doc.set_warehouse)?cur_frm.doc.set_warehouse :'',
-			price_list:(cur_frm.doc.selling_price_list)?cur_frm.doc.selling_price_list :'',
-			exclude_zero_quantity: me.dialog.fields_dict["exclude_zero_quantity"].get_value()}
+				item_code: me.dialog.fields_dict["item_code"].get_value(),
+				brand: JSON.stringify(me.dialog.fields_dict["brand"].get_value()),
+				txt: me.dialog.fields_dict["txt"].get_value(),
+				item_group: me.dialog.fields_dict["item_group"].get_value(),
+				country_of_origin: me.dialog.fields_dict["country_of_origin"].get_value(),
+				warehouse:(cur_frm.doc.set_warehouse)?cur_frm.doc.set_warehouse :'',
+				price_list:(cur_frm.doc.selling_price_list)?cur_frm.doc.selling_price_list :'',
+				exclude_zero_quantity: me.dialog.fields_dict["exclude_zero_quantity"].get_value()
+			}
 		};
 		frappe.call({
 			type: "GET",

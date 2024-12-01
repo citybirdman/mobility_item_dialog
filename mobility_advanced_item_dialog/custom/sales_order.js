@@ -18,9 +18,9 @@ frappe.ui.form.on('Sales Order', {
 			"Item Code":'',
 			"Brand":'',
 			"Item Name":'',
-			"Qty":"",
-			"Available": "",
-			"Rate":'',
+			"Actual Stock":"",
+			"Available Stock": "",
+			"Selling Price":'',
 		}
 		if(frappe.user_roles.includes("Chief Sales Officer")){
 			
