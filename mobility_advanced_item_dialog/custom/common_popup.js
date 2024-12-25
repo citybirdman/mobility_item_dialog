@@ -315,7 +315,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 					{
 						label: 'Quantity',
 						fieldname: 'qty',
-						fieldtype: 'Float',
+						fieldtype: 'Int',
 					},
 					], (values) => {
 						if(cur_frm.doc.docstatus == 0){
