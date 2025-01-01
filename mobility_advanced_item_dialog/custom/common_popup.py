@@ -24,8 +24,18 @@ def get_item_details(filters=None):
             condition += " and item_group = '{0}' ".format(filters["item_group"])
         if filters["txt"]:
             condition += " and (name like '%{0}%' or item_name like '%{0}%') ".format(filters["txt"])
-        result=frappe.db.sql("""Select item_code as 'Item Code', item_name as 'Item Name', brand as Brand ,has_batch_no as 'Has Batch No'
-        from `tabItem` where disabled=0 {0} """.format(condition),as_dict=True)
+        result=frappe.db.sql("""
+                        Select
+                            item_code as 'Item Code',
+                            item_name as 'Item Name',
+                            brand as Brand ,
+                            has_batch_no as 'Has Batch No'
+                             
+                        from `tabItem`
+                        where
+                            disabled=0 {0}
+                        ORDER BY brand     
+                    """.format(condition),as_dict=True)
         result_value=[]
         length=len(result)
         for i in range(0,length):
