@@ -40,6 +40,13 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			title: __("Select {0}", ["Items"]),
 			fields: fields,
 		});
+		this.dialog.get_field("txt").$wrapper.find("input").on("keydown", (event) => {
+			if (event.key === "Enter") {
+				console.log(event)
+				me.start += 20;
+				me.get_results();
+			}
+		});
 		this.dialog.$wrapper.find('.modal-dialog').removeClass("modal-lg").addClass("modal-xl");
 		if (this.add_filters_group) {
 			this.make_filter_area();
@@ -62,11 +69,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			{
 				fieldtype: "Data",
 				label: __("Item Search Bar"),
-				fieldname: "txt",
-				change: () => {
-					this.start += 20;
-					this.get_results();
-				}
+				fieldname: "txt"
 			},
 			{
 				fieldname: "column_break_3",
@@ -290,12 +293,12 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		});
 		let $row = $(`<div class="list-item" style="z-index: 1;height: auto;align-items: baseline;padding-left:unset;" >
 			<div class="list-item__content">
-				<div class="list-row-check" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() + "\"" : ""}, "rate":${result["Selling Price"]},"batch":${ (result["Batch"]) ? "\""+result["Batch"].toString()+ "\"" : "" },"prod_year":${(result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : ""}}' ${result.checked ? 'checked' : ''}></div>
+				<div class="list-row-check" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() + "\"" : ""}, "brand":${(result["Brand"]) ? "\"" +result["Brand"].toString() + "\"" : ""}, "rate":${result["Selling Price"]},"batch":${ (result["Batch"]) ? "\""+result["Batch"].toString()+ "\"" : "" },"prod_year":${(result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : ""}}' ${result.checked ? 'checked' : ''}></div>
 			</div>
 			${contents}
 		</div>`);
 		head ? $row.addClass('list-item--head').css("height","40px").css("align-items","unset")
-			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : "\"\""},"rate":${result["Selling Price"] || 0},"batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : "\"\""  },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "\"\"" }}' </div>`).append($row);
+			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : "\"\""},"rate":${result["Selling Price"] || 0}, "brand":${(result["Brand"]) ? "\"" +result["Brand"].toString() + "\"" : ""}, "batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : "\"\""  },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "\"\"" }}' </div>`).append($row);
 		$(".modal-dialog .list-item--head").css("z-index", 1);
 		$(".modal-dialog .shaded-section").css("overflow", 'scroll');
 		$(".modal-dialog .shaded-section").css("display", 'grid');
@@ -340,6 +343,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 									}
 									row.qty = values.qty;
 									row.rate = data.rate;
+									row.brand = data.brand;
 									items_table.grid.refresh()
 								})()
 							}
