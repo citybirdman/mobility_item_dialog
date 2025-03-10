@@ -42,7 +42,6 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		});
 		this.dialog.get_field("txt").$wrapper.find("input").on("keydown", (event) => {
 			if (event.key === "Enter") {
-				console.log(event)
 				me.start += 20;
 				me.get_results();
 			}
