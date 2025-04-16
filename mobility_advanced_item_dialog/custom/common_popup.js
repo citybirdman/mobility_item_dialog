@@ -18,11 +18,12 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		let fields = this.get_primary_filters();
 		fields = fields.concat([
 			{
-				fieldtype: "Button", fieldname: "more_btn", label: __("Search"), 
+				fieldtype: "Button", fieldname: "more_btn", label: __("Search"),
 				click: () => {
 					this.start += 20;
 					this.get_results();
-				}
+				},
+				hidden: 1
 			},
 			{ fieldtype: "HTML", fieldname: "results_area" }
 		]);
@@ -34,11 +35,18 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			title: 'Get Items',
 			fields: fields,
 		});
+		// console.log(this.dialog)
 		this.dialog = new frappe.ui.Dialog({
 			title: __("Select {0}", ["Items"]),
 			fields: fields,
-			
 		});
+		// this.dialog.get_field("txt").$wrapper.find("input").on("keydown", (event) => {
+		// 	if (event.key === "Enter") {
+		// 		me.start += 20;
+		// 		me.get_results();
+		// 	}
+		// });
+		this.dialog.$wrapper.find('.modal-dialog').removeClass("modal-lg").addClass("modal-xl");
 		if (this.add_filters_group) {
 			this.make_filter_area();
 		}
@@ -60,7 +68,11 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			{
 				fieldtype: "Data",
 				label: __("Item Search Bar"),
-				fieldname: "txt"
+				fieldname: "txt",
+				change: () => {
+					this.start += 20;
+					this.get_results();
+				}
 			},
 			{
 				fieldname: "column_break_3",
@@ -70,17 +82,56 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				fieldtype: "Link",
 				label: __("Item Code"),
 				fieldname: "item_code",
-				options: "Item"
+				options: "Item",
+				change: () => {
+					this.start += 20;
+					this.get_results();
+				}
 			},
 			{
 			fieldname: "column_break_1",
 			fieldtype: "Column Break"
 			},
 			{
-				fieldtype: "Link",
+				fieldtype: "MultiSelectList",
 				label: __("Brand"),
 				fieldname: "brand",
 				options: "Brand",
+				get_data: function (txt) {
+					return frappe.db.get_link_options("Brand", txt);
+				},
+				change: () => {
+					this.start += 20;
+					this.get_results();
+				}
+			},
+			{
+				fieldname: "column_break_4",
+				fieldtype: "Column Break"
+			},
+			{
+				fieldtype: "Link",
+				label: __("Item Group"),
+				fieldname: "item_group",
+				options: "Item Group",
+				change: () => {
+					this.start += 20;
+					this.get_results();
+				}
+			},
+			{
+				fieldname: "column_break_5",
+				fieldtype: "Column Break"
+			},
+			{
+				fieldtype: "Link",
+				label: __("Country Of Origin"),
+				fieldname: "country_of_origin",
+				options: "Country",
+				change: () => {
+					this.start += 20;
+					this.get_results();
+				}
 			},
 			{
 				fieldname: "section_break_1",
@@ -89,7 +140,12 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			{
 				fieldtype: "Check",
 				label: __("Exclude Zero Quantity"),
-				fieldname: "exclude_zero_quantity",	
+				fieldname: "exclude_zero_quantity",
+				default: 1,
+				change: () => {
+					this.start += 20;
+					this.get_results();
+				}
 			},
 		];
 		fields = [
@@ -129,14 +185,13 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 	}
 
 	bind_events() {
-		
 		let me = this;
-		frappe.ui.keys.on('enter',function(e)
-		{
-			me.get_results();
-		}
+		// frappe.ui.keys.on('enter',function(e)
+		// {
+		// 	me.get_results();
+		// }
 
-		);
+		// );
 		this.$results.on('click', '.list-item-container', function (e) {
 			if (!$(e.target).is(':checkbox') && !$(e.target).is('a')) {
 				$(this).find(':checkbox').trigger('click');
@@ -147,18 +202,14 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				.prop("checked", ($(e.target).is(':checked')));
 		});
 		this.$parent.find('.input-with-feedback').on('change', () => {
-			
 			frappe.flags.auto_scroll = false;
-			
 		});
 		this.$parent.find('[data-fieldtype="Data"]').on('input', () => {
-			
 			var $this = $(this);
 			clearTimeout($this.data('timeout'));
 			$this.data('timeout', setTimeout(function () {
 				frappe.flags.auto_scroll = false;
 				me.empty_list();
-				
 			}, 300));
 		});
 
@@ -166,9 +217,8 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 
 	get_checked_values() {
 		return this.$results.find('.list-item-container').map(function () {
-			
 			if ($(this).find('.list-row-check:checkbox:checked').length > 0) {
-				return $(this).attr('data-item-name');			
+				return $(this).attr('data-item-name');
 			}
 		}).get();
 	}
@@ -193,7 +243,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		}
 		columns.forEach(function (column) {
 			if (column === "Item Name") {
-				contents += `<div class="list-item__content ellipsis" style="flex: 40%">
+				contents += `<div class="list-item__content ellipsis" style="flex: 45%">
 				${
 					head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
 					: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}" style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || '')}</span>`
@@ -203,7 +253,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				}
 			else {
 				if (column === "Item Code") {
-					contents += `<div class="list-item__content ellipsis" style="flex: 17%">
+					contents += `<div class="list-item__content ellipsis" style="flex: 10%">
 					${
 						head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
 						: (`<span class="ellipsis result-row" title="${__(result[column] || '')}">
@@ -215,14 +265,23 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				}
 				else{
 					if (column === "Brand") {
-						contents += `<div class="list-item__content ellipsis" style="flex: 13%">
+						contents += `<div class="list-item__content ellipsis" style="flex: 15%">
 					${
 						head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
 						: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}"style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || '')}</span>`
 						: `<a href="${"#Form/" + me.doctype + "/" + result[column] || ''}" class="list-id ellipsis" title="${__(result[column] || '')}">
 						${__(result[column] || '')}</a>`)}
 						</div>`;
-					} 
+					}
+					// else if (column === "Qty") {
+					// 		contents += `<div class="list-item__content ellipsis" style="flex: 50%">
+					// 	${
+					// 		head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
+					// 		: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}"style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || '')}</span>`
+					// 		: `<a href="${"#Form/" + me.doctype + "/" + result[column] || ''}" class="list-id ellipsis" title="${__(result[column] || '')}">
+					// 		${__(result[column] || '')}</a>`)}
+					// 		</div>`;
+					// 	}
 					else {
 						contents += `<div class="list-item__content ellipsis" style="flex: 10%">
 					${
@@ -237,12 +296,12 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		});
 		let $row = $(`<div class="list-item" style="z-index: 1;height: auto;align-items: baseline;padding-left:unset;" >
 			<div class="list-item__content">
-				<div class="list-row-check" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() + "\"" : ""}, "rate":${result["Rate"]},"batch":${ (result["Batch"]) ? "\""+result["Batch"].toString()+ "\"" : "" },"prod_year":${(result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : ""}}' ${result.checked ? 'checked' : ''}></div>
+				<div class="list-row-check" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() + "\"" : ""}, "brand":${(result["Brand"]) ? "\"" +result["Brand"].toString() + "\"" : ""}, "rate":${result["Selling Price"]},"batch":${ (result["Batch"]) ? "\""+result["Batch"].toString()+ "\"" : "" },"prod_year":${(result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : ""}}' ${result.checked ? 'checked' : ''}></div>
 			</div>
 			${contents}
 		</div>`);
 		head ? $row.addClass('list-item--head').css("height","40px").css("align-items","unset")
-			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : ""},"rate":${result["Rate"]},"batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : ""  },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "" }}' </div>`).append($row);
+			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : "\"\""},"rate":${result["Selling Price"] || 0}, "brand":${(result["Brand"]) ? "\"" +result["Brand"].toString() + "\"" : ""}, "batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : "\"\""  },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "\"\"" }}' </div>`).append($row);
 		$(".modal-dialog .list-item--head").css("z-index", 1);
 		$(".modal-dialog .shaded-section").css("overflow", 'scroll');
 		$(".modal-dialog .shaded-section").css("display", 'grid');
@@ -262,17 +321,36 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 					{
 						label: 'Quantity',
 						fieldname: 'qty',
-						fieldtype: 'Float',
+						fieldtype: 'Int',
 					},
 					], (values) => {
-						let rows = cur_frm.add_child("items")
-						frappe.model.set_value(rows.doctype, rows.name, "item_code", data.item_code.toString());
-						setTimeout(() => { if(values.qty){
-						frappe.model.set_value(rows.doctype, rows.name, "qty", values.qty);
-						frappe.model.set_value(rows.doctype, rows.name, "rate", data.rate);
-						frappe.model.set_value(rows.doctype, rows.name, "batch", data.batch.toString());
-						frappe.model.set_value(rows.doctype, rows.name, "production_year", data.prod_year.toString());
-						}},2000);			
+						if(cur_frm.doc.docstatus == 0){
+							let rows = cur_frm.add_child("items")
+							frappe.model.set_value(rows.doctype, rows.name, "item_code", data.item_code.toString());
+							setTimeout(() => { if(values.qty){
+								frappe.model.set_value(rows.doctype, rows.name, "qty", values.qty);
+								frappe.model.set_value(rows.doctype, rows.name, "rate", data.rate);
+								frappe.model.set_value(rows.doctype, rows.name, "batch", data.batch.toString());
+								frappe.model.set_value(rows.doctype, rows.name, "production_year", data.prod_year.toString());
+							}},2000);
+						}else if(cur_frm.doc.docstatus == 1){
+							if(values.qty){
+								(async ()=>{
+									let items_table = me.cur_dialog.get_field("trans_items")
+									items_table.grid.add_new_row();
+									let row = items_table.grid.get_data().slice(-1)[0]
+									row.item_code = data.item_code.toString();
+									let b = await frappe.db.get_value('Item', { 'item_code': data.item_code.toString() }, 'item_name')
+									if(b.message){
+										row.item_name = b.message.item_name
+									}
+									row.qty = values.qty;
+									row.rate = data.rate;
+									row.brand = data.brand;
+									items_table.grid.refresh()
+								})()
+							}
+						}
 					})
 				}
 			return false;
@@ -281,7 +359,6 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 	}
 
 	render_result_list(results, more = 0, empty = true) {
-		
 		var me = this;
 		var more_btn = me.dialog.fields_dict.more_btn.$wrapper;
 		if (!frappe.flags.auto_scroll && empty) {
@@ -299,7 +376,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			this.$results.animate({ scrollTop: me.$results.prop('scrollHeight') }, 500);
 		}
 	}
-	
+
 	empty_list() {
 		let checked = this.get_checked_items().map(item => {
 			return {
@@ -333,18 +410,21 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				}
 			});
 		}
-		
+
 		let filter_group = this.get_custom_filters();
-	
+
 		Object.assign(filters, filter_group);
 		let args = {
 			filters:{
-			item_code: me.dialog.fields_dict["item_code"].get_value(),
-			brand: me.dialog.fields_dict["brand"].get_value(),
-			txt: me.dialog.fields_dict["txt"].get_value(),
-			warehouse:(cur_frm.doc.set_warehouse)?cur_frm.doc.set_warehouse :'',
-			price_list:(cur_frm.doc.selling_price_list)?cur_frm.doc.selling_price_list :'',	
-			exclude_zero_quantity: me.dialog.fields_dict["exclude_zero_quantity"].get_value()}
+				item_code: me.dialog.fields_dict["item_code"].get_value(),
+				brand: JSON.stringify(me.dialog.fields_dict["brand"].get_value()),
+				txt: me.dialog.fields_dict["txt"].get_value(),
+				item_group: me.dialog.fields_dict["item_group"].get_value(),
+				country_of_origin: me.dialog.fields_dict["country_of_origin"].get_value(),
+				warehouse:(cur_frm.doc.set_warehouse)?cur_frm.doc.set_warehouse :'',
+				price_list:(cur_frm.doc.selling_price_list)?cur_frm.doc.selling_price_list :'',
+				exclude_zero_quantity: me.dialog.fields_dict["exclude_zero_quantity"].get_value()
+			}
 		};
 		frappe.call({
 			type: "GET",
