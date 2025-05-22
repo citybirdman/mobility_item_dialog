@@ -417,9 +417,10 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				txt: me.dialog.fields_dict["txt"].get_value(),
 				item_group: me.dialog.fields_dict["item_group"].get_value(),
 				country_of_origin: me.dialog.fields_dict["country_of_origin"].get_value(),
-				warehouse:(cur_frm.doc.set_warehouse)?cur_frm.doc.set_warehouse :'',
+				warehouse:(cur_frm.doctype != "Stock Entry")?((cur_frm.doc.set_warehouse)?cur_frm.doc.set_warehouse :''):((cur_frm.doc.from_warehouse)?cur_frm.doc.from_warehouse :''),
 				price_list:(cur_frm.doc.selling_price_list)?cur_frm.doc.selling_price_list :'',
-				exclude_zero_quantity: me.dialog.fields_dict["exclude_zero_quantity"].get_value()
+				exclude_zero_quantity: me.dialog.fields_dict["exclude_zero_quantity"].get_value(),
+				doc_type: cur_frm.doctype
 			}
 		};
 		frappe.call({
