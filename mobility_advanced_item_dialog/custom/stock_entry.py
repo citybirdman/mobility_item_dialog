@@ -1,4 +1,3 @@
-{% include 'mobility_advanced_item_dialog/custom/common_popup.js' %}
 frappe.ui.form.on('Stock Entry', {
 	refresh: function(frm){
 		if (frm.doc.docstatus == 1) {
