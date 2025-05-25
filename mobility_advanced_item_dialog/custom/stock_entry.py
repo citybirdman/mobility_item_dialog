@@ -4,7 +4,7 @@ frappe.ui.form.on('Stock Entry', {
 			frm.set_df_property('custom_get_items0','hidden',1)
 		}
 	},
-	onload_post_render(frm){
+	onload_post_render: function(frm){
 		if(frm.doc.__unsaved==1){
 			if(frm.doc.items.length > 0 && !frm.doc.items[0].item_code) {
 				frm.clear_table("items");
