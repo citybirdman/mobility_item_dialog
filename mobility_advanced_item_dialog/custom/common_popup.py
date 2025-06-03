@@ -8,7 +8,7 @@ def get_item_details(filters=None):
     filters = loads(filters)
     if filters["warehouse"] == "":
         frappe.throw("Source Warehouse is not selected ")
-    if  filters["price_list"] == "":
+    if  filters["price_list"] == "" and filters["doc_type"] != "Stock Entry":
         frappe.throw("Price List is not selected")
     if(filters["item_code"] or  filters["brand"]  or filters["txt"] or filters["country_of_origin"] or filters["item_group"]):
         condition = ""
