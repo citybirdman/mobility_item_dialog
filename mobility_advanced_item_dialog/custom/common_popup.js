@@ -51,7 +51,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		this.$results.append(this.make_list_row());
 		this.args = {};
 		this.bind_events();
-		this.get_results();
+		// this.get_results();
 		this.dialog.show();
 	}
 
