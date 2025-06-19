@@ -267,7 +267,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 						${__(result[column] || '')}</a>`)}
 						</div>`;
 					}
-					else if (column === "Selling Price") {					
+					else if (column === "Selling Price") {				
 						contents += `<div class="list-item__content ellipsis" style="flex: 15%">
 					${
 						head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
