@@ -267,6 +267,15 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 						${__(result[column] || '')}</a>`)}
 						</div>`;
 					}
+					else if (column === "Selling Price") {					
+						contents += `<div class="list-item__content ellipsis" style="flex: 15%">
+					${
+						head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
+						: (frappe.user_roles.includes("Chief Sales Officer") && result["Valuation Rate"] && result["Selling Price"] < result["Valuation Rate"] ? `<span class="ellipsis result-row" style="color: red;" title="${__(result[column] || 0)}"style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || 0)}</span>`
+						: `<a href="${"#Form/" + me.doctype + "/" + result[column] || 0}" class="list-id ellipsis" title="${__(result[column] || 0)}">
+						${__(result[column] || 0)}</a>`)}
+						</div>`;
+					}
 					// else if (column === "Qty") {
 					// 		contents += `<div class="list-item__content ellipsis" style="flex: 50%">
 					// 	${
