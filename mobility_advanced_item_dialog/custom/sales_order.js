@@ -18,6 +18,7 @@ frappe.ui.form.on('Sales Order', {
 			"Item Code":'',
 			"Brand":'',
 			"Item Name":'',
+			"Production Year": "",
 			"Actual Stock":"",
 			"Available Stock": "",
 			"Selling Price":'',
