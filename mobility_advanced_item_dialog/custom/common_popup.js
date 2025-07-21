@@ -304,7 +304,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			${contents}
 		</div>`);
 		head ? $row.addClass('list-item--head').css("height","40px").css("align-items","unset")
-			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : "\"\""},"item_name":${(result["Item Name"]) ? "\"" +result["Item Name"].toString() +"\"" : "\"\""}, "rate":${result["Selling Price"] || 0},"batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : "\"\""  },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "\"\"" }}' </div>`).append($row);
+			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : "\"\""},"item_name":${(result["Item Name"]) ? "\"" +result["Item Name"].toString() +"\"" : "\"\""}, "rate":${result["Selling Price"] || 0},"batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : "\"\""  },"brand":${ (result["Brand"]) ? "\"" + result["Brand"].toString() + "\"" : "\"\"" },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "\"\"" }}' </div>`).append($row);
 		$(".modal-dialog .list-item--head").css("z-index", 1);
 		$(".modal-dialog .shaded-section").css("overflow", 'scroll');
 		$(".modal-dialog .shaded-section").css("display", 'grid');
