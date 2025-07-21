@@ -356,6 +356,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 										row.item_name = b.message.item_name
 									}
 									row.qty = values.qty;
+									row.production_year = data.prod_year;
 									row.rate = data.rate;
 									row.brand = data.brand;
 									items_table.grid.refresh()
