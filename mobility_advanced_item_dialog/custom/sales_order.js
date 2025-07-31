@@ -21,6 +21,7 @@ frappe.ui.form.on('Sales Order', {
 			"Actual Stock":"",
 			"Available Stock": "",
 			"Selling Price":'',
+			"Latest Price":'',
 		}
 		if(frappe.user_roles.includes("Chief Sales Officer")){
 			

@@ -186,6 +186,33 @@ def get_item_details(filters=None):
             ON
                 TRUE 
             """, as_dict=True)
+
+            rate = frappe.db.sql(f"""SELECT sii.rate, si.posting_date
+                FROM `tabSales Invoice Item` sii
+                INNER JOIN `tabSales Invoice` si
+                ON sii.parent = si.name
+                WHERE sii.docstatus = 1
+                AND si.docstatus = 1
+                AND si.is_return = 0
+                AND si.is_debit_note = 0
+                AND si.customer = %s
+                AND sii.item_code = %s
+                ORDER BY si.posting_date DESC, si.name DESC
+                LIMIT 1;""", (filters["customer"], result[i]["Item Code"]), as_dict=True)
+            if not rate:
+                rate = frappe.db.sql("""
+                    SELECT sii.rate, si.posting_date
+                    FROM `tabSales Invoice Item` sii
+                    INNER JOIN `tabSales Invoice` si
+                    ON sii.parent = si.name
+                    WHERE sii.docstatus = 1
+                    AND si.docstatus = 1
+                    AND si.is_return = 0
+                    AND si.is_debit_note = 0
+                    AND sii.item_code = %s
+                    ORDER BY si.posting_date DESC, si.name DESC
+                    LIMIT 1;
+                """, (result[i]["Item Code"]), as_dict=True)
             if not actual_available_qty:
                 actual_available_qty = 0
             if(filters["exclude_zero_quantity"]==0):
@@ -196,6 +223,7 @@ def get_item_details(filters=None):
                             "Item Name":str(result[i]["Item Name"]),
                             "Brand":str(result[i]["Brand"]),
                             "Selling Price":batch_values[j]["rate"],
+                            "Latest Price": rate[0].rate if rate else 0,
                             "Actual Stock":batch_values[j]["qty"],
                             "Available Stock": actual_available_qty[0].actual_available_qty or 0,
                             "Valuation Rate": vr[0].valuation_rate
@@ -209,7 +237,8 @@ def get_item_details(filters=None):
                                 "Item Code":str(result[i]["Item Code"]),
                                 "Item Name":str(result[i]["Item Name"]),
                                 "Brand":str(result[i]["Brand"]),
-                                "Selling Price":batch_values[j]["rate"],
+                                "Selling Price":rate[0].rate if rate else batch_values[j]["rate"],
+                                "Latest Price": rate[0].rate if rate else 0,
                                 "Actual Stock":batch_values[j]["qty"],
                                 "Available Stock": actual_available_qty[0].actual_available_qty or 0,
                                 "Valuation Rate": vr[0].valuation_rate
