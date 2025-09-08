@@ -338,12 +338,12 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 						if(cur_frm.doc.docstatus == 0){
 							let rows = cur_frm.add_child("items")
 							frappe.model.set_value(rows.doctype, rows.name, "item_code", data.item_code.toString());
-							setTimeout(() => { if(values.qty){
+							// setTimeout(() => { if(values.qty){
 								frappe.model.set_value(rows.doctype, rows.name, "qty", values.qty);
-								frappe.model.set_value(rows.doctype, rows.name, "rate", data.rate);
 								frappe.model.set_value(rows.doctype, rows.name, "batch", data.batch.toString());
 								frappe.model.set_value(rows.doctype, rows.name, "production_year", data.prod_year.toString());
-							}},2000);
+								frappe.model.set_value(rows.doctype, rows.name, "rate", data.rate);
+							// }}, 2000);
 						}else if(cur_frm.doc.docstatus == 1){
 							if(values.qty){
 								(async ()=>{
