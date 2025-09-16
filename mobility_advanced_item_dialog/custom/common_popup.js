@@ -338,14 +338,22 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 						if(cur_frm.doc.docstatus == 0){
 							let rows = cur_frm.add_child("items")
 							frappe.model.set_value(rows.doctype, rows.name, "item_code", data.item_code.toString());
+<<<<<<< HEAD
 							// setTimeout(() => { 
 							if(values.qty){
+=======
+							// setTimeout(() => { if(values.qty){
+>>>>>>> 7c93fb5 (commit)
 								frappe.model.set_value(rows.doctype, rows.name, "qty", values.qty);
 								frappe.model.set_value(rows.doctype, rows.name, "batch", data.batch.toString());
 								frappe.model.set_value(rows.doctype, rows.name, "production_year", data.prod_year.toString());
 								frappe.model.set_value(rows.doctype, rows.name, "rate", data.rate);
+<<<<<<< HEAD
 							}
 						// },2000);
+=======
+							// }}, 2000);
+>>>>>>> 7c93fb5 (commit)
 						}else if(cur_frm.doc.docstatus == 1){
 							if(values.qty){
 								(async ()=>{
@@ -404,6 +412,11 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 
 	get_results() {
 		let me = this;
+
+		if (this.active_request) {
+			this.active_request.abort();
+			this.active_request = null;
+		}
 		let filters = this.get_query ? this.get_query().filters : {} || {};
 		let filter_fields = [];
 		if ($.isArray(this.setters)) {
@@ -441,7 +454,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				doc_type: cur_frm.doctype
 			}
 		};
-		frappe.call({
+		this.active_request = frappe.call({
 			type: "GET",
 			body:args,
 			method: this.custom_method,
