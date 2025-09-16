@@ -402,6 +402,11 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 
 	get_results() {
 		let me = this;
+
+		if (this.active_request) {
+			this.active_request.abort();
+			this.active_request = null;
+		}
 		let filters = this.get_query ? this.get_query().filters : {} || {};
 		let filter_fields = [];
 		if ($.isArray(this.setters)) {
@@ -439,7 +444,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				doc_type: cur_frm.doctype
 			}
 		};
-		frappe.call({
+		this.active_request = frappe.call({
 			type: "GET",
 			body:args,
 			method: this.custom_method,
