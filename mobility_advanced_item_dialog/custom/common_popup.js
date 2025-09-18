@@ -335,25 +335,31 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 						fieldtype: 'Int',
 					},
 					], (values) => {
+						if(cur_frm.doctype === "Sales Order") {
+							// check if item already exists in items table
+							let exists = (cur_frm.doc.items || []).some(row => row.item_code === data.item_code);
+							if (exists) {
+								frappe.msgprint({
+									title: __('Duplicate Item'),
+									message: __('Item {0} is already added in the table.', [data.item_code]),
+									indicator: 'red'
+								});
+								return;
+							}
+						}
 						if(cur_frm.doc.docstatus == 0){
 							let rows = cur_frm.add_child("items")
 							frappe.model.set_value(rows.doctype, rows.name, "item_code", data.item_code.toString());
-<<<<<<< HEAD
 							// setTimeout(() => { 
 							if(values.qty){
-=======
 							// setTimeout(() => { if(values.qty){
->>>>>>> 7c93fb5 (commit)
 								frappe.model.set_value(rows.doctype, rows.name, "qty", values.qty);
 								frappe.model.set_value(rows.doctype, rows.name, "batch", data.batch.toString());
 								frappe.model.set_value(rows.doctype, rows.name, "production_year", data.prod_year.toString());
 								frappe.model.set_value(rows.doctype, rows.name, "rate", data.rate);
-<<<<<<< HEAD
 							}
 						// },2000);
-=======
 							// }}, 2000);
->>>>>>> 7c93fb5 (commit)
 						}else if(cur_frm.doc.docstatus == 1){
 							if(values.qty){
 								(async ()=>{
