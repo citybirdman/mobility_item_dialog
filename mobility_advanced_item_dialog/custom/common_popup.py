@@ -59,7 +59,7 @@ def get_item_details(filters=None):
     for item in result:
         item["Brand"] = item["Brand"] or ""
 
-        # Get quantities per production year + Selling Price
+        # Get quantities per Selling Price
         batch_values = get_qnt_on_warehouse(
             item["Item Code"],
             filters["warehouse"],
@@ -80,39 +80,10 @@ def get_item_details(filters=None):
         """, (item["Item Code"], filters["warehouse"]), as_dict=True)
 
         val_rate = valuation_rate_data[0].valuation_rate if valuation_rate_data else 0
-
-        # Get Reserved Quantity per production year
-        reserved_qty_data = frappe.db.sql("""
-            SELECT
-                production_year,
-                SUM(qty_to_deliver) AS reserved_qty
-            FROM (
-                SELECT
-                    sales_order_item.production_year,
-                    (sales_order_item.qty - sales_order_item.delivered_qty) AS qty_to_deliver
-                FROM `tabSales Order Item` sales_order_item
-                INNER JOIN `tabSales Order` sales_order
-                    ON sales_order_item.parent = sales_order.name
-                WHERE sales_order.docstatus = 1
-                    AND sales_order_item.docstatus = 1
-                    AND sales_order.status NOT IN ('Completed', 'Closed')
-                    AND (sales_order_item.qty - sales_order_item.delivered_qty) > 0
-                    AND sales_order_item.item_code = %s
-                    AND sales_order.set_warehouse = %s
-            ) sub
-            GROUP BY production_year
-        """, (item["Item Code"], filters["warehouse"]), as_dict=True)
-
-        reserved_qty_map = {
-            row.production_year: row.reserved_qty for row in reserved_qty_data or []
-        }
-
+        
         # Loop over batches
         for row in batch_values:
-            production_year = row["production_year"]
             actual_qty = int(row["qty"] or 0)
-            reserved_qty = reserved_qty_map.get(production_year, 0) or 0
-            available_qty = actual_qty - reserved_qty
 
             if filters.get("exclude_zero_quantity", 0) == 0 or row["qty"] != '0':
                 result_value.append({
@@ -121,9 +92,7 @@ def get_item_details(filters=None):
                     "Brand": item["Brand"],
                     "Selling Price": row["rate"],
                     "Actual Stock": actual_qty,
-                    "Available Stock": available_qty,
-                    "Valuation Rate": val_rate,
-                    "Production Year": production_year
+                    "Valuation Rate": val_rate
                 })
 
     return {"values": result_value}
@@ -132,14 +101,12 @@ def get_item_details(filters=None):
 def get_qnt_on_warehouse(item, warehouse, price_list):
     data = frappe.db.sql("""
         SELECT
-            COALESCE(SUM(actual_qty), 0) AS qty,
-            production_year
+            COALESCE(SUM(actual_qty), 0) AS qty
         FROM `tabStock Ledger Entry`
         WHERE
             item_code = %s
             AND warehouse = %s
             AND is_cancelled = 0
-        GROUP BY production_year
     """, (item, warehouse), as_dict=True)
 
     result = []
@@ -151,18 +118,16 @@ def get_qnt_on_warehouse(item, warehouse, price_list):
                 "Item Price",
                 {"item_code": item, "price_list": price_list},
                 "price_list_rate"
-            ) or 0,
-            "production_year": ""
+            ) or 0
         })
     else:
         for row in data:
-            # Fetch price for production year if applicable
+            # Fetch price
             rate = frappe.db.get_value(
                 "Item Price",
                 {
                     "item_code": item,
-                    "price_list": price_list,
-                    "production_year": row.production_year
+                    "price_list": price_list
                 },
                 "price_list_rate"
             )
@@ -176,8 +141,7 @@ def get_qnt_on_warehouse(item, warehouse, price_list):
 
             result.append({
                 "qty": str(int(row.qty or 0)),
-                "rate": rate,
-                "production_year": row.production_year or ""
+                "rate": rate
             })
 
     return result

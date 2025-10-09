@@ -1,16 +1,18 @@
 frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 	constructor(opts) {
 		Object.assign(this, opts);
+		this.results = []; // Initialize results array to prevent undefined errors
+		this.dialogOpen = false; // Flag to prevent multiple dialogs
 		var me = this;
-			if (this.doctype != "[Select]") {
-				frappe.model.with_doctype(this.doctype, function () {
+		if (this.doctype != "[Select]") {
+			frappe.model.with_doctype(this.doctype, function () {
 				me.make();
 			});
-			}
-			else {
-				this.make();
-			}
+		} else {
+			this.make();
+		}
 	}
+
 	make() {
 		let me = this;
 		this.page_length = 20;
@@ -18,7 +20,9 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		let fields = this.get_primary_filters();
 		fields = fields.concat([
 			{
-				fieldtype: "Button", fieldname: "more_btn", label: __("Search"),
+				fieldtype: "Button",
+				fieldname: "more_btn",
+				label: __("Search"),
 				click: () => {
 					this.start += 20;
 					this.get_results();
@@ -53,6 +57,13 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		this.bind_events();
 		// this.get_results();
 		this.dialog.show();
+		
+		// Ensure event delegation is properly set up after dialog is shown
+		setTimeout(() => {
+			this.setup_row_click_events();
+		}, 100);
+		
+		// Global handler removed - using only direct handlers to prevent duplicates
 	}
 
 	get_primary_filters() {
@@ -83,8 +94,8 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				}
 			},
 			{
-			fieldname: "column_break_1",
-			fieldtype: "Column Break"
+				fieldname: "column_break_1",
+				fieldtype: "Column Break"
 			},
 			{
 				fieldtype: "MultiSelectList",
@@ -186,11 +197,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		// }
 
 		// );
-		this.$results.on('click', '.list-item-container', function (e) {
-			if (!$(e.target).is(':checkbox') && !$(e.target).is('a')) {
-				$(this).find(':checkbox').trigger('click');
-			}
-		});
+		// Basic event handlers for checkboxes and other elements
 		this.$results.on('click', '.list-item--head :checkbox', (e) => {
 			this.$results.find('.list-item-container .list-row-check')
 				.prop("checked", ($(e.target).is(':checked')));
@@ -207,6 +214,87 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 			}, 300));
 		});
 
+	}
+
+	open_quantity_dialog(data) {
+		// Prevent multiple dialogs from opening
+		if (this.dialogOpen) {
+			console.log('Dialog already open, ignoring duplicate request');
+			return;
+		}
+		
+		this.dialogOpen = true;
+		console.log('Opening quantity dialog for:', data.item_code);
+		
+		frappe.prompt([
+		{
+			label: 'Item Code',
+			fieldname: 'item_code',
+			fieldtype: 'Data',
+			default:data.item_code,
+			read_only:1
+		},
+		{
+			label: 'Item Name',
+			fieldname: 'item_name',
+			fieldtype: 'Data',
+			default:data.item_name,
+			read_only:1
+		},
+		{
+			label: 'Quantity',
+			fieldname: 'qty',
+			fieldtype: 'Int',
+		},
+		], (values) => {
+			// Reset flag when dialog closes
+			this.dialogOpen = false;
+			
+			if(cur_frm.doctype === "Sales Order") {
+				// check if item already exists in items table
+				let exists = (cur_frm.doc.items || []).some(row => row.item_code === data.item_code);
+				if (exists) {
+					frappe.msgprint({
+						title: __('Duplicate Item'),
+						message: __('Item {0} is already added in the table.', [data.item_code]),
+						indicator: 'red'
+					});
+					return;
+				}
+			}
+			if(cur_frm.doc.docstatus == 0){
+				let rows = cur_frm.add_child("items")
+				frappe.model.set_value(rows.doctype, rows.name, "item_code", data.item_code.toString());
+
+				if(values.qty){
+					frappe.model.set_value(rows.doctype, rows.name, "qty", values.qty);
+					frappe.model.set_value(rows.doctype, rows.name, "batch", data.batch.toString());
+					frappe.model.set_value(rows.doctype, rows.name, "rate", data.rate);
+				}
+			}else if(cur_frm.doc.docstatus == 1){
+				if(values.qty){
+					(async ()=>{
+						let items_table = this.cur_dialog.get_field("trans_items")
+						items_table.grid.add_new_row();
+						let row = items_table.grid.get_data().slice(-1)[0]
+						row.item_code = data.item_code.toString();
+						let b = await frappe.db.get_value('Item', { 'item_code': data.item_code.toString() }, 'item_name')
+						if(b.message){
+							row.item_name = b.message.item_name
+						}
+						row.qty = values.qty;
+						row.rate = data.rate;
+						row.brand = data.brand;
+						items_table.grid.refresh()
+					})()
+				}
+			}
+		});
+	}
+
+	setup_row_click_events() {
+		console.log('Event delegation setup - direct handlers are used instead');
+		console.log('Number of list-item-container elements:', this.$results.find('.list-item-container').length);
 	}
 
 	get_checked_values() {
@@ -262,7 +350,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 						contents += `<div class="list-item__content ellipsis" style="flex: 15%">
 					${
 						head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
-						: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}"style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || '')}</span>`
+						: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}" style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || '')}</span>`
 						: `<a href="${"#Form/" + me.doctype + "/" + result[column] || ''}" class="list-id ellipsis" title="${__(result[column] || '')}">
 						${__(result[column] || '')}</a>`)}
 						</div>`;
@@ -271,25 +359,16 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 						contents += `<div class="list-item__content ellipsis" style="flex: 15%">
 					${
 						head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
-						: (frappe.user_roles.includes("Chief Sales Officer") && result["Valuation Rate"] && result["Selling Price"] < result["Valuation Rate"] ? `<span class="ellipsis result-row" style="color: red;" title="${__(result[column] || 0)}"style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || 0)}</span>`
+						: (frappe.user_roles.includes("Chief Sales Officer") && result["Valuation Rate"] && result["Selling Price"] < result["Valuation Rate"] ? `<span class="ellipsis result-row" style="color: red; overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;" title="${__(result[column] || 0)}">${__(result[column] || 0)}</span>`
 						: `<a href="${"#Form/" + me.doctype + "/" + result[column] || 0}" class="list-id ellipsis" title="${__(result[column] || 0)}">
 						${__(result[column] || 0)}</a>`)}
 						</div>`;
 					}
-					// else if (column === "Qty") {
-					// 		contents += `<div class="list-item__content ellipsis" style="flex: 50%">
-					// 	${
-					// 		head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
-					// 		: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}"style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || '')}</span>`
-					// 		: `<a href="${"#Form/" + me.doctype + "/" + result[column] || ''}" class="list-id ellipsis" title="${__(result[column] || '')}">
-					// 		${__(result[column] || '')}</a>`)}
-					// 		</div>`;
-					// 	}
 					else {
 						contents += `<div class="list-item__content ellipsis" style="flex: 10%">
 					${
 						head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
-						: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}"style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || '')}</span>`
+						: (column !== "date" ? `<span class="ellipsis result-row" title="${__(result[column] || '')}" style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || '')}</span>`
 						: `<a href="${"#Form/" + me.doctype + "/" + result[column] || ''}" class="list-id ellipsis" title="${__(result[column] || '')}">
 						${__(result[column] || '')}</a>`)}
 						</div>`;
@@ -299,91 +378,58 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		});
 		let $row = $(`<div class="list-item" style="z-index: 1;height: auto;align-items: baseline;padding-left:unset;" >
 			<div class="list-item__content">
-				<div class="list-row-check" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() + "\"" : ""}, "rate":${result["Selling Price"]},"batch":${ (result["Batch"]) ? "\""+result["Batch"].toString()+ "\"" : "" },"prod_year":${(result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : ""}}' ${result.checked ? 'checked' : ''}></div>
+				<div class="list-row-check" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" + result["Item Code"].toString() + "\"" : "\"\""}, "rate":${result["Selling Price"] || 0},"batch":${ (result["Batch"]) ? "\""+result["Batch"].toString()+ "\"" : "\"\"" }}' ${result.checked ? 'checked' : ''}></div>
 			</div>
 			${contents}
 		</div>`);
 		head ? $row.addClass('list-item--head').css("height","40px").css("align-items","unset")
-			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : "\"\""},"item_name":${(result["Item Name"]) ? "\"" +result["Item Name"].toString() +"\"" : "\"\""}, "rate":${result["Selling Price"] || 0},"batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : "\"\""  },"brand":${ (result["Brand"]) ? "\"" + result["Brand"].toString() + "\"" : "\"\"" },"prod_year":${ (result["Production Year"]) ? "\"" + result["Production Year"].toString() + "\"" : "\"\"" }}' </div>`).append($row);
+			: $row = $(`<div class="list-item-container" data-item-name='{"item_code":${(result["Item Code"]) ? "\"" +result["Item Code"].toString() +"\"" : "\"\""},"item_name":${(result["Item Name"]) ? "\"" +result["Item Name"].toString() +"\"" : "\"\""}, "rate":${result["Selling Price"] || 0},"batch":${ (result["Batch"]) ? "\"" + result["Batch"].toString()+ "\"" : "\"\""  },"brand":${ (result["Brand"]) ? "\"" + result["Brand"].toString() + "\"" : "\"\"" }}'></div>`).append($row);
 		$(".modal-dialog .list-item--head").css("z-index", 1);
 		$(".modal-dialog .shaded-section").css("overflow", 'scroll');
 		$(".modal-dialog .shaded-section").css("display", 'grid');
-		$row.find("a")
-			.click(function () {
-				let data = {};
-				data=(JSON.parse($row.find("a").prevObject[0].dataset.itemName))
-				if(data){
-					console.log(data)
-					frappe.prompt([
-					{
-						label: 'Item Code',
-						fieldname: 'item_code',
-						fieldtype: 'Data',
-						default:data.item_code,
-						read_only:1
-					},
-					{
-						label: 'Item Name',
-						fieldname: 'item_name',
-						fieldtype: 'Data',
-						default:data.item_name,
-						read_only:1
-					},
-					{
-						label: 'Quantity',
-						fieldname: 'qty',
-						fieldtype: 'Int',
-					},
-					], (values) => {
-						if(cur_frm.doctype === "Sales Order") {
-							// check if item already exists in items table
-							let exists = (cur_frm.doc.items || []).some(row => row.item_code === data.item_code);
-							if (exists) {
-								frappe.msgprint({
-									title: __('Duplicate Item'),
-									message: __('Item {0} is already added in the table.', [data.item_code]),
-									indicator: 'red'
-								});
-								return;
-							}
-						}
-						if(cur_frm.doc.docstatus == 0){
-							let rows = cur_frm.add_child("items")
-							frappe.model.set_value(rows.doctype, rows.name, "item_code", data.item_code.toString());
-
-							// setTimeout(() => { 
-							if(values.qty){
-							// setTimeout(() => { if(values.qty){
-								frappe.model.set_value(rows.doctype, rows.name, "qty", values.qty);
-								frappe.model.set_value(rows.doctype, rows.name, "batch", data.batch.toString());
-								frappe.model.set_value(rows.doctype, rows.name, "production_year", data.prod_year.toString());
-								frappe.model.set_value(rows.doctype, rows.name, "rate", data.rate);
-							}
-						// },2000);
-							// }}, 2000);
-						}else if(cur_frm.doc.docstatus == 1){
-							if(values.qty){
-								(async ()=>{
-									let items_table = me.cur_dialog.get_field("trans_items")
-									items_table.grid.add_new_row();
-									let row = items_table.grid.get_data().slice(-1)[0]
-									row.item_code = data.item_code.toString();
-									let b = await frappe.db.get_value('Item', { 'item_code': data.item_code.toString() }, 'item_name')
-									if(b.message){
-										row.item_name = b.message.item_name
-									}
-									row.qty = values.qty;
-									row.production_year = data.prod_year;
-									row.rate = data.rate;
-									row.brand = data.brand;
-									items_table.grid.refresh()
-								})()
-							}
-						}
-					})
+		
+		// Add direct click handler to each row for immediate response
+		if (!head) {
+			// Make the row visually clickable
+			$row.css('cursor', 'pointer');
+			
+			// Try multiple event types to catch the click
+			$row.on('click mousedown touchend', function (e) {
+				console.log('Direct row event fired!', e.type);
+				
+				// Don't handle checkbox clicks
+				if ($(e.target).is(':checkbox') || $(e.target).closest(':checkbox').length) {
+					console.log('Direct: Checkbox click ignored');
+					return;
 				}
-			return false;
-		})
+				
+				// Stop event propagation to prevent other handlers
+				e.preventDefault();
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+				
+				let data = {};		
+				let dataItemName = $(this).attr('data-item-name');
+				console.log('Direct: Data item name:', dataItemName);
+				
+				if(dataItemName){
+					try {
+						data = JSON.parse(dataItemName);
+						console.log('Direct: Parsed data:', data);
+					} catch (error) {
+						console.error('Direct: Error parsing data:', error);
+						return;
+					}
+				}
+				
+				if(data && data.item_code){
+					me.open_quantity_dialog(data);
+				} else {
+					console.log('Direct: No data found or invalid data');
+				}
+			});
+		}
+		
 		return $row;
 	}
 
@@ -404,6 +450,11 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		if (frappe.flags.auto_scroll) {
 			this.$results.animate({ scrollTop: me.$results.prop('scrollHeight') }, 500);
 		}
+		
+		// Ensure event handlers are set up for newly added results
+		setTimeout(() => {
+			me.setup_row_click_events();
+		}, 50);
 	}
 
 	empty_list() {

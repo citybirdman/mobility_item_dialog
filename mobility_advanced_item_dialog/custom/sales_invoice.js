@@ -14,18 +14,23 @@ frappe.ui.form.on('Sales Invoice', {
 		}
 	},
 	get_items:function(frm) {
+		let display_columns = {
+			"Item Code":'',
+			"Brand":'',
+			"Item Name":'',
+			"Actual Stock":"",
+			"Selling Price":"",
+		}
+		if(frappe.user_roles.includes("Chief Sales Officer")){
+			
+			display_columns["Valuation Rate"]= "";
+		}
+
 		var dialog = new frappe.ui.form.AereleSelectDialog({
 				doctype: "Sales Invoice",
 				target: frm,
 				setters: [],
-				display_columns: {
-					"Item Code":'',
-					"Item Name":'',
-					"Brand":'',
-					// "Production Year":'',
-					"Rate":'',
-					"Qty":""
-				},
+				display_columns,
 				custom_method: 'mobility_advanced_item_dialog.custom.common_popup.get_item_details',
 
 			})
