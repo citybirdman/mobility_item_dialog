@@ -133,13 +133,13 @@ def get_qnt_on_warehouse(item, warehouse, price_list):
     data = frappe.db.sql("""
         SELECT
             COALESCE(SUM(actual_qty), 0) AS qty,
-            production_year
+            IF(production_year = '', NULL, production_year) AS production_year
         FROM `tabStock Ledger Entry`
         WHERE
             item_code = %s
             AND warehouse = %s
             AND is_cancelled = 0
-        GROUP BY production_year
+        GROUP BY IF(production_year = '', NULL, production_year)
     """, (item, warehouse), as_dict=True)
 
     result = []

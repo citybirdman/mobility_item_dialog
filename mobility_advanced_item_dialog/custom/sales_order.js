@@ -13,7 +13,7 @@ frappe.ui.form.on('Sales Order', {
 			}
 		}
 	},
-	get_items:function(frm) {
+	get_items: async function(frm) {
 		let display_columns = {
 			"Item Code":'',
 			"Brand":'',
@@ -23,7 +23,7 @@ frappe.ui.form.on('Sales Order', {
 			"Available Stock": "",
 			"Selling Price":'',
 		}
-		if(frappe.user_roles.includes("Chief Sales Officer")){
+		if(await libya_customizations.utils.check_roles_included("show_valuation_rate")){
 			
 			display_columns["Valuation Rate"]= "";
 		}

@@ -11,11 +11,12 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 				this.make();
 			}
 	}
-	make() {
+	async make() {
 		let me = this;
 		this.page_length = 20;
 		this.start = 0;
 		let fields = this.get_primary_filters();
+		this.check_roles_included = await libya_customizations.utils.check_roles_included("show_valuation_rate");
 		fields = fields.concat([
 			{
 				fieldtype: "Button", fieldname: "more_btn", label: __("Search"),
@@ -48,7 +49,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		this.$wrapper = this.dialog.fields_dict.results_area.$wrapper.append(`<div class="results"
 			style="border: 1px solid #d1d8dd; border-radius: 3px; height: 300px; overflow: auto;"></div>`);
 		this.$results = this.$wrapper.find('.results');
-		this.$results.append(this.make_list_row());
+		this.$results.append(await this.make_list_row());
 		this.args = {};
 		this.bind_events();
 		// this.get_results();
@@ -222,7 +223,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		return this.results.filter(res => checked_values.includes(res.date));
 	}
 
-	make_list_row(result = {}) {
+	async make_list_row(result = {}) {
 		var me = this;
 		let head = Object.keys(result).length === 0;
 		let contents = ``;
@@ -271,7 +272,7 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 						contents += `<div class="list-item__content ellipsis" style="flex: 15%">
 					${
 						head ? `<span class="ellipsis text-muted" title="${__(frappe.model.unscrub(column))}" >${__(frappe.model.unscrub(column))}</span>`
-						: (frappe.user_roles.includes("Chief Sales Officer") && result["Valuation Rate"] && result["Selling Price"] < result["Valuation Rate"] ? `<span class="ellipsis result-row" style="color: red;" title="${__(result[column] || 0)}"style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || 0)}</span>`
+					: ((me.check_roles_included) && result["Valuation Rate"] && result["Selling Price"] < result["Valuation Rate"] ? `<span class="ellipsis result-row" style="color: red;" title="${__(result[column] || 0)}"style = "overflow-wrap: break-word;word-wrap: break-word;white-space: break-spaces;">${__(result[column] || 0)}</span>`
 						: `<a href="${"#Form/" + me.doctype + "/" + result[column] || 0}" class="list-id ellipsis" title="${__(result[column] || 0)}">
 						${__(result[column] || 0)}</a>`)}
 						</div>`;
@@ -398,8 +399,8 @@ frappe.ui.form.AereleSelectDialog = class AereleSelectDialog {
 		let checked = this.get_checked_values();
 		results
 			.filter(result => !checked.includes(result.date))
-			.forEach(result => {
-				me.$results.append(me.make_list_row(result));
+			.forEach(async result => {
+				me.$results.append(await me.make_list_row(result));
 			});
 		if (frappe.flags.auto_scroll) {
 			this.$results.animate({ scrollTop: me.$results.prop('scrollHeight') }, 500);
