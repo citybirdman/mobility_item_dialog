@@ -29,3 +29,4 @@ frappe = ">=15.0.0,<16.0.0"
 
 [project.urls]
 Homepage = "https://github.com/yourusername/mobility_advanced_item_dialog"
+
