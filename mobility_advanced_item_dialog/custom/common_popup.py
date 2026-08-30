@@ -22,42 +22,43 @@ def get_item_details(filters=None):
         from `tabItem` where has_batch_no= 1 {0}  and disabled= 0 """.format(condition),as_dict=True)
         result_value=[]
         length=len(result)
-        reserved_qty_data = frappe.db.sql("""
-            SELECT
-                production_year,
-                SUM(qty_to_deliver) AS reserved_qty
-            FROM (
+        for item in result:
+            reserved_qty_data = frappe.db.sql("""
                 SELECT
-                    sales_order_item.production_year,
-                    (sales_order_item.qty - sales_order_item.delivered_qty) AS qty_to_deliver
-                FROM `tabSales Order Item` sales_order_item
-                INNER JOIN `tabSales Order` sales_order
-                    ON sales_order_item.parent = sales_order.name
-                WHERE sales_order.docstatus = 1
-                    AND sales_order_item.docstatus = 1
-                    AND sales_order.status NOT IN ('Completed', 'Closed')
-                    AND (sales_order_item.qty - sales_order_item.delivered_qty) > 0
-                    AND sales_order_item.item_code = %s
-                    AND sales_order.set_warehouse = %s
-            ) sub
-            GROUP BY production_year
-        """, (filters["item_code"], filters["warehouse"]), as_dict=True)
+                    production_year,
+                    SUM(qty_to_deliver) AS reserved_qty
+                FROM (
+                    SELECT
+                        sales_order_item.production_year,
+                        (sales_order_item.qty - sales_order_item.delivered_qty) AS qty_to_deliver
+                    FROM `tabSales Order Item` sales_order_item
+                    INNER JOIN `tabSales Order` sales_order
+                        ON sales_order_item.parent = sales_order.name
+                    WHERE sales_order.docstatus = 1
+                        AND sales_order_item.docstatus = 1
+                        AND sales_order.status NOT IN ('Completed', 'Closed')
+                        AND (sales_order_item.qty - sales_order_item.delivered_qty) > 0
+                        AND sales_order_item.item_code = %s
+                        AND sales_order.set_warehouse = %s
+                ) sub
+                GROUP BY production_year
+            """, (item["Item Code"], filters["warehouse"]), as_dict=True)
 
-        reserved_qty_map = {
-            row.production_year: row.reserved_qty for row in reserved_qty_data or []
-        }
-        for i in range(0,length):
-            if(str(result[i]["Brand"])=='None'):
-                result[i]["Brand"] = ""
-            
-            batch_values=get_qnt_on_batch_warehouse(str(result[i]["Item Code"]),filters["warehouse"],filters["price_list"])
-            if(filters["exclude_zero_quantity"]==0):
-                for j in range(len(batch_values)):
-                    result_value.append({"Item Code":str(result[i]["Item Code"]),"Item Name":str(result[i]["Item Name"]),"Brand":str(result[i]["Brand"]),"Production Year":str(batch_values[j]["production_year"]),"Rate":batch_values[j]["rate"],"Qty":batch_values[j]["qty"],"Batch":str(batch_values[j]["batch_no"]), "Available Stock":str(int(batch_values[j]["qty"])-int(reserved_qty_map.get(batch_values[j]["production_year"],0)))})
-            else:
-                for j in range(len(batch_values)):
-                    if(batch_values[j]["qty"]!='0'):
+            reserved_qty_map = {
+                row.production_year: row.reserved_qty for row in reserved_qty_data or []
+            }
+            for i in range(0,length):
+                if(str(result[i]["Brand"])=='None'):
+                    result[i]["Brand"] = ""
+                
+                batch_values=get_qnt_on_batch_warehouse(str(result[i]["Item Code"]),filters["warehouse"],filters["price_list"])
+                if(filters["exclude_zero_quantity"]==0):
+                    for j in range(len(batch_values)):
                         result_value.append({"Item Code":str(result[i]["Item Code"]),"Item Name":str(result[i]["Item Name"]),"Brand":str(result[i]["Brand"]),"Production Year":str(batch_values[j]["production_year"]),"Rate":batch_values[j]["rate"],"Qty":batch_values[j]["qty"],"Batch":str(batch_values[j]["batch_no"]), "Available Stock":str(int(batch_values[j]["qty"])-int(reserved_qty_map.get(batch_values[j]["production_year"],0)))})
+                else:
+                    for j in range(len(batch_values)):
+                        if(batch_values[j]["qty"]!='0'):
+                            result_value.append({"Item Code":str(result[i]["Item Code"]),"Item Name":str(result[i]["Item Name"]),"Brand":str(result[i]["Brand"]),"Production Year":str(batch_values[j]["production_year"]),"Rate":batch_values[j]["rate"],"Qty":batch_values[j]["qty"],"Batch":str(batch_values[j]["batch_no"]), "Available Stock":str(int(batch_values[j]["qty"])-int(reserved_qty_map.get(batch_values[j]["production_year"],0)))})
         return {"values": result_value}
     return{"values":[]}
 
